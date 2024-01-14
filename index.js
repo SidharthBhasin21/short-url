@@ -10,6 +10,8 @@ connectMongo("mongodb://127.0.0.1:27017/short-url").then(() =>
   console.log("Mongodb connected")
 );
 
+app.set("view engine", "ejs");
+
 app.get("/", (req, res) => {
   return res.end("Hello the page is loading....");
 });
@@ -19,6 +21,7 @@ app.use("/url", urlRoute);
 
 app.get("/:shortid", async (req, res) => {
   const shortId = req.params.shortid;
+  if (!shortId) return;
   const entry = await URL.findOneAndUpdate(
     {
       shortId,
@@ -29,7 +32,7 @@ app.get("/:shortid", async (req, res) => {
       },
     }
   );
-  res.redirect(entry.redirectUrl);
+  res.redirect(entry?.redirectUrl);
 });
 
 app.listen(PORT, () =>
