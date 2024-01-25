@@ -1,9 +1,14 @@
 const express = require("express");
-const urlRoute = require("./routes/url");
 const connectMongo = require("./connect");
 const path = require("path");
 const URL = require("./models/url");
-const staticRouter = require("./routes/staticRouter");
+const coodieParser = require("cookie-parser");
+
+const staticRoute = require("./routes/staticRouter");
+const urlRoute = require("./routes/url");
+const userRoute = require("./routes/users");
+const { restrictToLoggedInUserOnly ,checkAuth} = require("./middlewares/auth");
+
 
 const app = express();
 const PORT = 8000;
@@ -15,17 +20,16 @@ connectMongo("mongodb://127.0.0.1:27017/short-url").then(() =>
 app.set("view engine", "ejs");
 app.set("views", path.resolve("./views"));
 
-// app.get("/", async (req, res) => {
-//   const allUrls = await URL.find({});
-//   return res.render("home", {
-//     urls: allUrls,
-//   });
-// });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/url", urlRoute);
-app.use("/", staticRouter);
+app.use(coodieParser());
+
+
+
+app.use("/url",restrictToLoggedInUserOnly , urlRoute);
+app.use("/user", userRoute);
+app.use("/",checkAuth,staticRoute);
 
 app.get("/:shortid", async (req, res) => {
   const shortId = req.params.shortid;
